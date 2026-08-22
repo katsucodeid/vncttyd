@@ -1,12 +1,22 @@
 # Menggunakan sistem operasi Ubuntu dasar
 FROM ubuntu:latest
 
-# Menginstal ttyd dan beberapa alat dasar (nano, curl, wget)
+# Menginstal ttyd, sudo, dan beberapa alat dasar
 RUN apt-get update && \
-    apt-get install -y ttyd nano curl wget iputils-ping
+    apt-get install -y ttyd sudo nano curl wget iputils-ping
+
+# Membuat user baru bernama 'userweb'
+RUN useradd -m -s /bin/bash userweb
+
+# Memberikan akses sudo kepada 'userweb' TANPA password
+RUN echo "userweb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Berpindah dari root ke userweb
+USER userweb
+WORKDIR /home/userweb
 
 # Mengekspos port 8080
 EXPOSE 8080
 
-# Menjalankan ttyd di port 8080 tanpa password, langsung membuka 'bash'
+# Menjalankan ttyd
 CMD ["ttyd", "-p", "8080", "bash"]
