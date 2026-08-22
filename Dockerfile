@@ -1,13 +1,13 @@
-# Menggunakan base image noVNC Ubuntu LXDE (Focal/20.04)
+# Menggunakan base image noVNC Ubuntu LXDE (Focal/20.04) yang stabil
 FROM dorowu/ubuntu-desktop-lxde-vnc:focal
 
-# Menambahkan repository PPA untuk mendapatkan Python 3.10
+# Menambahkan repository PPA untuk menginstal Python 3.10
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
     apt-get update
 
-# Menginstal Python 3.10, file header (dev), dan compiler (build-essential)
+# Menginstal Python 3.10, file header, dan alat kompilasi (build-essential)
 RUN apt-get install -y python3.10 python3.10-dev python3.10-distutils curl build-essential
 
 # Mengatur agar perintah 'python' dan 'python3' selalu mengarah ke Python 3.10
