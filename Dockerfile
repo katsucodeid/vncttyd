@@ -1,26 +1,23 @@
-# Menggunakan Ubuntu 22.04 (Versi ini menggunakan Python 3.10 sebagai bawaan aslinya)
-FROM ubuntu:22.04
+# Menggunakan base image noVNC Ubuntu LXDE (Focal/20.04)
+FROM dorowu/ubuntu-desktop-lxde-vnc:focal
 
-# Mencegah dialog interaktif yang bisa membuat proses build di Railway tersendat
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Menginstal shellinabox (untuk terminal murni), Python 3.10, pip, sudo, git, dan tmux
+# Menambahkan repository PPA untuk mendapatkan Python 3.10
 RUN apt-get update && \
-    apt-get install -y shellinabox sudo nano curl wget git tmux python3 python3-pip iputils-ping && \
-    apt-get clean
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get update
 
-# Membuat user baru bernama 'userweb'
-RUN useradd -m -s /bin/bash userweb
+# Menginstal Python 3.10, file header (dev), dan compiler (build-essential)
+RUN apt-get install -y python3.10 python3.10-dev python3.10-distutils curl build-essential
 
-# Memberikan akses sudo kepada 'userweb' TANPA password
-RUN echo "userweb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Mengatur agar perintah 'python' dan 'python3' selalu mengarah ke Python 3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 
-# Berpindah ke userweb agar lebih aman
-USER userweb
-WORKDIR /home/userweb
+# Mengunduh dan menginstal pip khusus untuk Python 3.10
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.10 get-pip.py && \
+    rm get-pip.py
 
-# Mengekspos port 8080
-EXPOSE 8080
-
-# Menjalankan shellinabox untuk tampilan layar hitam terminal dan menahan session agar tidak closed
-CMD /usr/bin/shellinaboxd -t -p 8080 -s "/:userweb:userweb:/home/userweb:/bin/bash" && tail -f /dev/null
+# Mengekspos port 80 (Port default bawaan noVNC)
+EXPOSE 80
