@@ -14,8 +14,5 @@ RUN echo "userweb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 # Mengekspos port 8080
 EXPOSE 8080
 
-# Menjalankan shellinabox
-# -t (tanpa SSL karena Railway sudah HTTPS)
-# -p 8080 (port yang digunakan)
-# -s (langsung membuka bash sebagai 'userweb' tanpa perlu login)
-CMD ["shellinaboxd", "-t", "-p", "8080", "-s", "/:userweb:userweb:/home/userweb:/bin/bash"]
+# Menjalankan shellinabox dan menambahkan 'tail' agar container tetap hidup di Railway
+CMD /usr/bin/shellinaboxd -t -p 8080 -s "/:userweb:userweb:/home/userweb:/bin/bash" && tail -f /dev/null
