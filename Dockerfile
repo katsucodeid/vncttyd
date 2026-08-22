@@ -1,18 +1,23 @@
-# Menggunakan sistem operasi Ubuntu dasar
+# Menggunakan sistem operasi Ubuntu
 FROM ubuntu:latest
 
-# Menginstal shellinabox, sudo, dan beberapa alat dasar
+# Menginstal tools dasar dan sudo
 RUN apt-get update && \
-    apt-get install -y shellinabox sudo nano curl wget iputils-ping
+    apt-get install -y curl wget sudo nano iputils-ping
 
-# Membuat user baru bernama 'userweb'
-RUN useradd -m -s /bin/bash userweb
+# Menginstal Code-Server (VS Code Web) secara otomatis
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Memberikan akses sudo kepada 'userweb' TANPA password
-RUN echo "userweb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Membuat user 'userweb' dan memberikannya akses sudo tanpa password
+RUN useradd -m -s /bin/bash userweb && \
+    echo "userweb ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Berpindah ke userweb agar aman
+USER userweb
+WORKDIR /home/userweb
 
 # Mengekspos port 8080
 EXPOSE 8080
 
-# Menjalankan shellinabox dan menambahkan 'tail' agar container tetap hidup di Railway
-CMD /usr/bin/shellinaboxd -t -p 8080 -s "/:userweb:userweb:/home/userweb:/bin/bash" && tail -f /dev/null
+# Menjalankan Code-Server tanpa password agar langsung terbuka
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none", "--disable-telemetry"]
