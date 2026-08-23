@@ -4,7 +4,7 @@ FROM debian:bookworm-slim
 # Mencegah prompt interaktif
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update dan install paket dasar (tanpa ttyd)
+# Update dan install paket dasar (termasuk Python dan alat build)
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
@@ -14,6 +14,11 @@ RUN apt-get update && apt-get install -y \
     procps \
     net-tools \
     openssh-server \
+    python3 \
+    python3-pip \
+    python-is-python3 \
+    build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Download dan pasang ttyd secara manual versi terbaru langsung dari GitHub
