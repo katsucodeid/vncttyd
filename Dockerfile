@@ -1,23 +1,41 @@
-# Menggunakan base image noVNC Ubuntu LXDE (Focal/20.04) yang stabil
-FROM dorowu/ubuntu-desktop-lxde-vnc:focal
+# Menggunakan base image Debian Bookworm slim
+FROM debian:bookworm-slim
 
-# Menambahkan repository PPA untuk menginstal Python 3.10
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get update
+# Mencegah prompt interaktif
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Menginstal Python 3.10, file header, dan alat kompilasi (build-essential)
-RUN apt-get install -y python3.10 python3.10-dev python3.10-distutils curl build-essential
+# Update dan install paket dasar (tanpa ttyd)
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    nano \
+    sudo \
+    procps \
+    net-tools \
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/*
 
-# Mengatur agar perintah 'python' dan 'python3' selalu mengarah ke Python 3.10
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+# Download dan pasang ttyd secara manual versi terbaru langsung dari GitHub
+RUN wget -O /usr/bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64 && \
+    chmod +x /usr/bin/ttyd
 
-# Mengunduh dan menginstal pip khusus untuk Python 3.10
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python3.10 get-pip.py && \
-    rm get-pip.py
+# Konfigurasi SSH
+RUN mkdir /var/run/sshd
+RUN echo 'root:root123' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/profile
 
-# Mengekspos port 80 (Port default bawaan noVNC)
-EXPOSE 80
+# Buat startup script dengan penanganan port dinamis Railway ($PORT)
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'service ssh start' >> /start.sh && \
+    echo 'PORT="${PORT:-7681}"' >> /start.sh && \
+    echo 'exec ttyd -p "$PORT" -i 0.0.0.0 -W bash' >> /start.sh && \
+    chmod +x /start.sh
+
+# Expose port (opsional)
+EXPOSE 22
+
+# Jalankan script
+CMD ["/start.sh"]
